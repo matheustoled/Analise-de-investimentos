@@ -1,6 +1,7 @@
 #Requests e web scraping
 import requests
 from bs4 import BeautifulSoup
+import json
 #Manipulação de planilhas
 import pandas as pd
 from openpyxl.styles import PatternFill
@@ -72,9 +73,9 @@ def obter_dados_ativos(ativo):
     site = BeautifulSoup(requisicao.content, "html.parser")
 
     #Encontrar as informações desejadas
-    preco_atual = site.find('strong', {'class': 'value'}).text.strip()
     infos = site.find_all('strong', {'class': 'value d-block lh-4 fs-4 fw-700'})
     infos2 = site.find_all('strong', {'class': 'value'})
+    preco_atual = site.find('strong', {'class': 'value'}).text.strip()
     margem_liquida = infos[23].text.strip()
     div_liquida_patrimonio = infos[14].text.strip()
     roic = infos[26].text.strip()
@@ -88,7 +89,8 @@ def obter_dados_ativos(ativo):
     ev_ebitda = infos[4].text.strip()
     lpa = infos[10].text.strip()
 
-    print(infos)
+    #print(infos) -> Usar para mapear novas informações
+    #print(infos2) -> Usar para mapear novas informações
 
     # Organizar os dados em um dicionário
     return {
@@ -102,7 +104,7 @@ def obter_dados_ativos(ativo):
         'P/L': pl,
         'P/VP': p_vp,
         'D.Y': dy,
-        'LIQ. CORRENTE': liq_corrente,
+        'Liq. Corrente': liq_corrente,
         'ROE': roe,
         'EV/EBITDA': ev_ebitda,
         'LPA': lpa
