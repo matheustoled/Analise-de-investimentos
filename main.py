@@ -10,6 +10,8 @@ from openpyxl import load_workbook
 #Criação de interface
 from tkinter import *
 import tkinter as tk
+#Matemática
+import math
 
 #Carregar planilha
 planilha = load_workbook('Investimentos.xlsx')
@@ -75,7 +77,8 @@ def obter_dados_ativos(ativo):
     #Encontrar as informações desejadas
     infos = site.find_all('strong', {'class': 'value d-block lh-4 fs-4 fw-700'})
     infos2 = site.find_all('strong', {'class': 'value'})
-    preco_atual = site.find('strong', {'class': 'value'}).text.strip()
+    infos3 = site.find_all('div', {'class': 'w-45 w-xs-auto'})
+    preco_atual = float(site.find('strong', {'class': 'value'}).text.strip().replace(',','.'))
     margem_liquida = infos[23].text.strip()
     div_liquida_patrimonio = infos[14].text.strip()
     roic = infos[26].text.strip()
@@ -83,11 +86,16 @@ def obter_dados_ativos(ativo):
     tag_along = infos2[6].text.strip()
     pl = infos[1].text.strip()
     p_vp = infos[3].text.strip()
-    dy = infos[0].text.strip()
+    dy = float(infos[0].text.strip("%").replace(',', '.'))
     liq_corrente = infos[19].text.strip()
     roe = infos[24].text.strip()
     ev_ebitda = infos[4].text.strip()
-    lpa = infos[10].text.strip()
+    lpa = float(infos[10].text.strip().replace(',', '.'))
+    vpa = float(infos[8].text.strip().replace(',', '.'))
+    teto9 = (dy*preco_atual)/100*0.09
+    valor_justo = math.sqrt(22.5*lpa*vpa)
+    ey = (lpa/preco_atual)*100
+    ey2 = (vpa/preco_atual)*100
 
     #print(infos) -> Usar para mapear novas informações
     #print(infos2) -> Usar para mapear novas informações
@@ -95,19 +103,25 @@ def obter_dados_ativos(ativo):
     # Organizar os dados em um dicionário
     return {
         'Ativo': ativo,
-        'Preço Atual': preco_atual,
+        'Valor': preco_atual,
+        'VPA': vpa,
+        'Teto 9%': teto9,
+        'Valor Justo por Ação': valor_justo,
         'Margem Líquida': margem_liquida,
-        'Dívida Líquida/Patrimônio': div_liquida_patrimonio,
-        'ROIC': roic,
-        'Dívida Líquida/Ebitida': div_liquida_ebitda,
-        'Tag Along': tag_along,
+        'LPA': lpa,
+        'DY': dy,
+        'EY': ey,
+        'EY2': ey2,
         'P/L': pl,
         'P/VP': p_vp,
-        'D.Y': dy,
-        'Liq. Corrente': liq_corrente,
         'ROE': roe,
+        'ROIC': roic,
+        
+        'Tag Along': tag_along,
         'EV/EBITDA': ev_ebitda,
-        'LPA': lpa
+        'Dívida Líquida/Patrimônio': div_liquida_patrimonio,
+        'Dívida Líquida/Ebitida': div_liquida_ebitda,
+        'Liq. Corrente': liq_corrente,
     }
 
 #Função para salvar os dados em Excel
