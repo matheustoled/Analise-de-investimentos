@@ -4,17 +4,24 @@ from bs4 import BeautifulSoup
 import json
 #Manipulação de planilhas
 import pandas as pd
+import openpyxl
 from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import CellIsRule, ColorScaleRule, FormulaRule
 from openpyxl import load_workbook
+from openpyxl.styles import Alignment
 #Criação de interface
 from tkinter import *
 import tkinter as tk
 #Matemática
 import math
 
+#Definição de variáveis iniciais
+max_linhas = 1
+
 #Carregar planilha
-planilha = load_workbook('Investimentos.xlsx')
+wb = openpyxl.load_workbook('Investimentos.xlsx', data_only=True)
+sheet1 = wb['Sheet1']
+sheet1 = wb.active
 
 #Lista com ações que o usuário escolheu
 lista_acoes = []
@@ -45,9 +52,11 @@ entrada.pack(pady=10)
 
 #Criando função de entrada da informação
 def adicionar_acao():
+    global max_linhas
     acao = entrada.get()
     if acao:  # Verifica se o campo de entrada não está vazio
         lista_acoes.append(acao)
+        max_linhas += 1
         entrada.delete(0, tk.END)  # Limpa o campo de entrada após adicionar o nome
         print(f"Ação '{acao}' adicionado(a)!")
     else:
@@ -77,28 +86,50 @@ def obter_dados_ativos(ativo):
     #Encontrar as informações desejadas
     infos = site.find_all('strong', {'class': 'value d-block lh-4 fs-4 fw-700'})
     infos2 = site.find_all('strong', {'class': 'value'})
-    infos3 = site.find_all('div', {'class': 'w-45 w-xs-auto'})
-    preco_atual = float(site.find('strong', {'class': 'value'}).text.strip().replace(',','.'))
-    margem_liquida = infos[23].text.strip()
-    div_liquida_patrimonio = infos[14].text.strip()
-    roic = infos[26].text.strip()
-    div_liquida_ebitda = infos[15].text.strip()
-    tag_along = infos2[6].text.strip()
-    pl = infos[1].text.strip()
-    p_vp = infos[3].text.strip()
-    dy = float(infos[0].text.strip("%").replace(',', '.'))
-    liq_corrente = infos[19].text.strip()
-    roe = infos[24].text.strip()
-    ev_ebitda = infos[4].text.strip()
-    lpa = float(infos[10].text.strip().replace(',', '.'))
-    vpa = float(infos[8].text.strip().replace(',', '.'))
-    teto9 = (dy*preco_atual)/100*0.09
-    valor_justo = math.sqrt(22.5*lpa*vpa)
-    ey = (lpa/preco_atual)*100
-    ey2 = (vpa/preco_atual)*100
+    #ativo #1
+    preco_atual = float(site.find('strong', {'class': 'value'}).text.strip().replace(',', '.')) #2
+    margem_liquida = infos[23].text.strip('%').replace(',', '.') #6
+    div_liquida_patrimonio = infos[14].text.strip().replace(',', '.') #17
+    roic = infos[26].text.strip('%').replace(',', '.') #14
+    div_liquida_ebitda = infos[15].text.strip().replace(',', '.') #18
+    tag_along = infos2[6].text.strip('%').replace(',', '.') #15
+    pl = infos[1].text.strip().replace(',', '.') #11
+    p_vp = infos[3].text.strip().replace(',', '.') #12
+    dy = infos[0].text.strip("%").replace(',', '.') #8
+    liq_corrente = infos[19].text.strip().replace(',', '.') #19
+    roe = infos[24].text.strip('%').replace(',', '.') #13
+    ev_ebitda = infos[4].text.strip().replace(',', '.') #16
+    lpa = infos[10].text.strip().replace(',', '.') #7
+    vpa = infos[8].text.strip().replace(',', '.') #3
 
-    #print(infos) -> Usar para mapear novas informações
-    #print(infos2) -> Usar para mapear novas informações
+    #Definindo valores padrão
+    teto9 = valor_justo = ey = ey2 = '-' 
+
+    #Calculando teto9 #4
+    if dy != '-' and preco_atual != '-':
+        dy = float(dy) / 100
+        teto9 = float(dy * preco_atual) / 100 * 0.09
+
+    #Calculando valor_justo #5
+    if lpa != '-' and vpa != '-':
+        lpa = float(lpa)
+        vpa = float(vpa)
+        valor_justo = math.sqrt(22.5 * lpa * vpa)
+
+    #Calculando ey #9
+    if lpa != '-' and preco_atual != '-':
+        ey = float(lpa / preco_atual) * 100
+
+    #Calculando ey2 #10
+    if vpa != '-' and preco_atual != '-':
+        ey2 = float(vpa / preco_atual) * 100
+
+    #Lista com os indicadores padrões de investimento
+    lista_indicadores = [ativo, preco_atual, vpa, teto9, valor_justo, margem_liquida, lpa, dy, ey, ey2, pl, p_vp, roe, roic, tag_along, ev_ebitda, div_liquida_patrimonio, div_liquida_ebitda, liq_corrente]
+
+    for i in len(lista_indicadores):
+        if lista_indicadores[i] == '-':
+            lista_indicadores[i].replace('-','')
 
     # Organizar os dados em um dicionário
     return {
@@ -107,22 +138,47 @@ def obter_dados_ativos(ativo):
         'VPA': vpa,
         'Teto 9%': teto9,
         'Valor Justo por Ação': valor_justo,
-        'Margem Líquida': margem_liquida,
+        'Margem Líquida': float(margem_liquida),#mudar
         'LPA': lpa,
         'DY': dy,
         'EY': ey,
         'EY2': ey2,
-        'P/L': pl,
-        'P/VP': p_vp,
-        'ROE': roe,
-        'ROIC': roic,
-        
+        'P/L': float(pl),
+        'P/VP': float(p_vp),
+        'ROE': float(roe),
+        'ROIC': float(roic),
+        #'Pay Out': payout,
         'Tag Along': tag_along,
-        'EV/EBITDA': ev_ebitda,
-        'Dívida Líquida/Patrimônio': div_liquida_patrimonio,
-        'Dívida Líquida/Ebitida': div_liquida_ebitda,
-        'Liq. Corrente': liq_corrente,
+        'EV/EBITDA': float(ev_ebitda),
+        'Dívida Líquida/Patrimônio': float(div_liquida_patrimonio),
+        'Dívida Líquida/Ebitida': float(div_liquida_ebitda),
+        'Liq. Corrente': float(liq_corrente)
     }
+
+#Função para formatar as colunas com R$
+#def formatar_coluna_como_reais(planilha, coluna):
+#    for i in range(2, max_linhas + 1):
+#        celula = planilha[f'{coluna}{i}']
+#        celula.number_format = 'R$ #,#0.#0'
+#
+#Função para formatar as colunas com %
+#def formatar_coluna_como_porcentagem(planilha, coluna):
+#    for i in range(2, max_linhas + 1):
+#        celula = planilha[f'{coluna}{i}']
+#        celula.number_format = '0.00%'
+
+#Função para formatar condicionalmente
+def formatar_condicionalmente(formatacao, planilha, coluna):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    planilha.conditional_formatting.add(area, formatacao)
+
+red_fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
+green_fill = PatternFill(start_color='C6F4CE', end_color='C6F4CE', fill_type='solid')
+empty_fill = PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid')
+
+formatacao_nulo = CellIsRule(operator='equal', formula=[''], fill=PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid'))
+formatacao_ruim_6 = CellIsRule(operator='lessThan', formula=['10'], fill=PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid'))
+formatacao_bom_6 = CellIsRule(operator='greaterThanOrEqual', formula=['10'], fill=PatternFill(start_color='C6F4CE', end_color='C6F4CE', fill_type='solid'))
 
 #Função para salvar os dados em Excel
 def salvar_dados_excel():
@@ -145,6 +201,30 @@ def salvar_dados_excel():
     #Exportar o DataFrame para um arquivo Excel
     df.to_excel('Investimentos.xlsx', index=False)
     print("Dados salvos!")
+
+    # Recarregar a planilha para aplicar a formatação
+    wb = openpyxl.load_workbook('Investimentos.xlsx')
+    sheet1 = wb.active
+
+    #Formatando números
+    #formatar_coluna_como_reais(planilha=sheet1, coluna='B')
+    #formatar_coluna_como_porcentagem(planilha=sheet1, coluna='H')
+    #formatar_coluna_como_porcentagem(planilha=sheet1, coluna='F')
+    #formatar_coluna_como_porcentagem(planilha=sheet1, coluna='M')
+    #formatar_coluna_como_porcentagem(planilha=sheet1, coluna='N')
+    #formatar_coluna_como_porcentagem(planilha=sheet1, coluna='O')
+
+    #Formatação condicional
+    formatar_condicionalmente(formatacao_nulo, sheet1, 'F')
+    formatar_condicionalmente(formatacao_ruim_6, sheet1, 'F')
+    formatar_condicionalmente(formatacao_bom_6, sheet1, 'F')
+    
+
+    #Congelar coluna A
+    sheet1.freeze_panes = "B1"
+
+    #Salvar planilha
+    wb.save('Investimentos.xlsx')
 
 #Cria um botão para salvar os dados em Excel
 botao_salvar = tk.Button(frame, text="Salvar Dados", command=salvar_dados_excel, bg=azul, fg=branco, font=("Uvy 13 bold"), relief=RAISED, overrelief=RIDGE)
