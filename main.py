@@ -80,80 +80,112 @@ def obter_dados_ativos(ativo):
     #Fazer request do site para puxar as infos
     requisicao = requests.get(url, headers=headers)
 
-    #ler todo o conteúdo HTML da página
+    #ler todo o conteúdo HTML do Status Invest
     site = BeautifulSoup(requisicao.content, "html.parser")
 
-    #Encontrar as informações desejadas
     infos = site.find_all('strong', {'class': 'value d-block lh-4 fs-4 fw-700'})
     infos2 = site.find_all('strong', {'class': 'value'})
-    #ativo #1
-    preco_atual = float(site.find('strong', {'class': 'value'}).text.strip().replace(',', '.')) #2
-    margem_liquida = infos[23].text.strip('%').replace(',', '.') #6
-    div_liquida_patrimonio = infos[14].text.strip().replace(',', '.') #17
-    roic = infos[26].text.strip('%').replace(',', '.') #14
-    div_liquida_ebitda = infos[15].text.strip().replace(',', '.') #18
-    tag_along = infos2[6].text.strip('%').replace(',', '.') #15
-    pl = infos[1].text.strip().replace(',', '.') #11
-    p_vp = infos[3].text.strip().replace(',', '.') #12
-    dy = infos[0].text.strip("%").replace(',', '.') #8
-    liq_corrente = infos[19].text.strip().replace(',', '.') #19
-    roe = infos[24].text.strip('%').replace(',', '.') #13
-    ev_ebitda = infos[4].text.strip().replace(',', '.') #16
-    lpa = infos[10].text.strip().replace(',', '.') #7
-    vpa = infos[8].text.strip().replace(',', '.') #3
-
+    try:
+        preco_atual = float(site.find('strong', {'class': 'value'}).text.replace(',','.').strip(''))
+    except ValueError:
+        preco_atual = 0.0
+    try:
+        margem_liquida = float(infos[23].text.replace(',','.').replace('%','').strip(''))
+    except ValueError:
+        margem_liquida = 0.0
+    try:
+        div_liquida_patrimonio = float(infos[14].text.replace(',','.').strip(''))
+    except ValueError:
+        div_liquida_patrimonio = 0.0
+    try:
+        roic = float(infos[26].text.replace(',','.').replace('%','').strip(''))
+    except ValueError:
+        roic = 0.0
+    try:
+        div_liquida_ebitda = float(infos[15].text.replace(',','.').strip(''))
+    except ValueError:
+        div_liquida_ebitda = 0.0
+    try:
+        tag_along = float(infos2[6].text.replace(',','.').replace('%','').strip(''))
+    except ValueError:
+        tag_along = 0.0
+    try:
+        pl = float(infos[1].text.replace(',','.').strip(''))
+    except ValueError:
+        pl = 0.0
+    try:
+        p_vp = float(infos[3].text.replace(',','.').strip(''))
+    except ValueError:
+        p_vp = 0.0
+    try:
+        dy = float(infos[0].text.replace(',','.').replace('%','').strip(''))
+    except ValueError:
+        dy = 0.0
+    try:
+        liq_corrente = float(infos[19].text.replace(',','.').strip(''))
+    except ValueError:
+        liq_corrente = 0.0
+    try:
+        roe = float(infos[24].text.replace(',','.').replace('%','').strip(''))
+    except ValueError:
+        roe = 0.0
+    try:
+        ev_ebitda = float(infos[4].text.replace(',','.').strip(''))
+    except ValueError:
+        ev_ebitda = 0.0
+    try:
+        lpa = float(infos[10].text.replace(',','.').strip(''))
+    except ValueError:
+        lpa = 0.0
+    try:
+        vpa = float(infos[8].text.replace(',','.').strip(''))
+    except ValueError:
+        vpa = 0.0
     #Definindo valores padrão
-    teto9 = valor_justo = ey = ey2 = '-' 
+    teto9 = valor_justo = ey = ey2 = 0
 
-    #Calculando teto9 #4
-    if dy != '-' and preco_atual != '-':
-        dy = float(dy) / 100
-        teto9 = float(dy * preco_atual) / 100 * 0.09
+    # Calculating teto9
+    if dy != 0 and preco_atual != 0:
+        teto9 = (dy * preco_atual) / 0.09
+    
+    # Calculating valor_justo
+    if lpa != 0 and vpa != 0:
+        try:
+            valor_justo = math.sqrt(22.5 * lpa * vpa)
+        except ValueError:
+            valor_justo = 0
 
-    #Calculando valor_justo #5
-    if lpa != '-' and vpa != '-':
-        lpa = float(lpa)
-        vpa = float(vpa)
-        valor_justo = math.sqrt(22.5 * lpa * vpa)
-
-    #Calculando ey #9
-    if lpa != '-' and preco_atual != '-':
-        ey = float(lpa / preco_atual) * 100
-
-    #Calculando ey2 #10
-    if vpa != '-' and preco_atual != '-':
-        ey2 = float(vpa / preco_atual) * 100
-
-    #Lista com os indicadores padrões de investimento
-    lista_indicadores = [ativo, preco_atual, vpa, teto9, valor_justo, margem_liquida, lpa, dy, ey, ey2, pl, p_vp, roe, roic, tag_along, ev_ebitda, div_liquida_patrimonio, div_liquida_ebitda, liq_corrente]
-
-    for i in len(lista_indicadores):
-        if lista_indicadores[i] == '-':
-            lista_indicadores[i].replace('-','')
-
-    # Organizar os dados em um dicionário
-    return {
+    # Calculating ey
+    if lpa != 0 and preco_atual != 0:
+        ey = (lpa / preco_atual) * 100
+    
+    # Calculating ey2
+    if vpa != 0 and preco_atual != 0:
+        ey2 = (vpa / preco_atual) * 100
+    
+    # Lista com os indicadores padrões de investimento
+    lista_indicadores = {
         'Ativo': ativo,
         'Valor': preco_atual,
         'VPA': vpa,
         'Teto 9%': teto9,
         'Valor Justo por Ação': valor_justo,
-        'Margem Líquida': float(margem_liquida),#mudar
+        'Margem Líquida': margem_liquida,
         'LPA': lpa,
         'DY': dy,
         'EY': ey,
         'EY2': ey2,
-        'P/L': float(pl),
-        'P/VP': float(p_vp),
-        'ROE': float(roe),
-        'ROIC': float(roic),
-        #'Pay Out': payout,
+        'P/L': pl,
+        'P/VP': p_vp,
+        'ROE': roe,
+        'ROIC': roic,
         'Tag Along': tag_along,
-        'EV/EBITDA': float(ev_ebitda),
-        'Dívida Líquida/Patrimônio': float(div_liquida_patrimonio),
-        'Dívida Líquida/Ebitida': float(div_liquida_ebitda),
-        'Liq. Corrente': float(liq_corrente)
+        'EV/EBITDA': ev_ebitda,
+        'Dívida Líquida/Patrimônio': div_liquida_patrimonio,
+        'Dívida Líquida/Ebitida': div_liquida_ebitda,
+        'Liq. Corrente': liq_corrente
     }
+    return lista_indicadores
 
 #Função para formatar as colunas com R$
 #def formatar_coluna_como_reais(planilha, coluna):
@@ -177,7 +209,7 @@ green_fill = PatternFill(start_color='C6F4CE', end_color='C6F4CE', fill_type='so
 empty_fill = PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid')
 
 formatacao_nulo = CellIsRule(operator='equal', formula=[''], fill=PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid'))
-formatacao_ruim_6 = CellIsRule(operator='lessThan', formula=['10'], fill=PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid'))
+formatacao_ruim_6 = CellIsRule(operator='between', formula=['0.001','9.999'], fill=PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid'))
 formatacao_bom_6 = CellIsRule(operator='greaterThanOrEqual', formula=['10'], fill=PatternFill(start_color='C6F4CE', end_color='C6F4CE', fill_type='solid'))
 
 #Função para salvar os dados em Excel
