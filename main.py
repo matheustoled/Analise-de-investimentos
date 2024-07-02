@@ -141,25 +141,22 @@ def obter_dados_ativos(ativo):
         vpa = float(infos[8].text.replace(',','.').strip(''))
     except ValueError:
         vpa = 0.0
+        
     #Definindo valores padrão
     teto9 = valor_justo = ey = ey2 = 0
 
-    # Calculating teto9
     if dy != 0 and preco_atual != 0:
-        teto9 = (dy * preco_atual) / 0.09
+        teto9 = (dy * preco_atual) / 9
     
-    # Calculating valor_justo
     if lpa != 0 and vpa != 0:
         try:
             valor_justo = math.sqrt(22.5 * lpa * vpa)
         except ValueError:
             valor_justo = 0
 
-    # Calculating ey
     if lpa != 0 and preco_atual != 0:
         ey = (lpa / preco_atual) * 100
     
-    # Calculating ey2
     if vpa != 0 and preco_atual != 0:
         ey2 = (vpa / preco_atual) * 100
     
@@ -192,25 +189,39 @@ def obter_dados_ativos(ativo):
 #    for i in range(2, max_linhas + 1):
 #        celula = planilha[f'{coluna}{i}']
 #        celula.number_format = 'R$ #,#0.#0'
-#
+
 #Função para formatar as colunas com %
 #def formatar_coluna_como_porcentagem(planilha, coluna):
 #    for i in range(2, max_linhas + 1):
 #        celula = planilha[f'{coluna}{i}']
 #        celula.number_format = '0.00%'
 
-#Função para formatar condicionalmente
-def formatar_condicionalmente(formatacao, planilha, coluna):
+#Funções formatação condicional
+def formatacao_condicional_bom(planilha, coluna, parametro, valor):
     area = "{}2:{}{}".format(coluna,coluna,max_linhas)
-    planilha.conditional_formatting.add(area, formatacao)
+    formatacao_bom = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='92D050', end_color='92D050', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_bom)
 
-red_fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
-green_fill = PatternFill(start_color='C6F4CE', end_color='C6F4CE', fill_type='solid')
-empty_fill = PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid')
+def formatacao_condicional_bom_b(planilha, coluna, parametro, valori, valorf):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    formatacao_bom = CellIsRule(operator=parametro, formula=[valori,valorf], fill=PatternFill(start_color='92D050', end_color='92D050', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_bom)
 
-formatacao_nulo = CellIsRule(operator='equal', formula=[''], fill=PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid'))
-formatacao_ruim_6 = CellIsRule(operator='between', formula=['0.001','9.999'], fill=PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid'))
-formatacao_bom_6 = CellIsRule(operator='greaterThanOrEqual', formula=['10'], fill=PatternFill(start_color='C6F4CE', end_color='C6F4CE', fill_type='solid'))
+def formatacao_condicional_ruim(planilha, coluna, parametro, valor):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    formatacao_ruim = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_ruim)
+
+def formatacao_condicional_ruim_b(planilha, coluna, parametro, valori, valorf):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    formatacao_ruim = CellIsRule(operator=parametro, formula=[valori,valorf], fill=PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_ruim)
+
+def formatacao_condicional_nulo(planilha, coluna, parametro, valor):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    formatacao_nulo = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_nulo)
+
 
 #Função para salvar os dados em Excel
 def salvar_dados_excel():
@@ -247,10 +258,49 @@ def salvar_dados_excel():
     #formatar_coluna_como_porcentagem(planilha=sheet1, coluna='O')
 
     #Formatação condicional
-    formatar_condicionalmente(formatacao_nulo, sheet1, 'F')
-    formatar_condicionalmente(formatacao_ruim_6, sheet1, 'F')
-    formatar_condicionalmente(formatacao_bom_6, sheet1, 'F')
-    
+    formatacao_condicional_bom(sheet1, 'F', 'greaterThanOrEqual', '10')
+    formatacao_condicional_ruim_b(sheet1, 'F', 'between', '0.001', '9.999')
+    formatacao_condicional_nulo(sheet1, 'F', 'equal', '')
+
+    formatacao_condicional_bom_b(sheet1, 'Q', 'between', '0.001','0.999')
+    formatacao_condicional_ruim(sheet1, 'Q', 'greaterThanOrEqual', '1')
+    formatacao_condicional_nulo(sheet1, 'Q', 'equal', '')
+
+    formatacao_condicional_bom(sheet1, 'N', 'greaterThanOrEqual', '15')
+    formatacao_condicional_ruim_b(sheet1, 'N', 'between', '0.001', '14.999')
+    formatacao_condicional_nulo(sheet1, 'N', 'equal', '')
+
+    formatacao_condicional_bom_b(sheet1, 'R', 'between', '0.001','2.999')
+    formatacao_condicional_ruim(sheet1, 'R', 'greaterThanOrEqual', '3')
+    formatacao_condicional_nulo(sheet1, 'R', 'equal', '')
+
+    formatacao_condicional_bom(sheet1, 'O', 'equal', '100')
+    #formatacao_condicional_ruim_b(sheet1, 'O', 'between', '0.001', '99.999')
+    formatacao_condicional_nulo(sheet1, 'O', 'equal', '')
+
+    formatacao_condicional_bom_b(sheet1, 'K', 'between', '0.001','9.999')
+    formatacao_condicional_ruim(sheet1, 'K', 'greaterThanOrEqual', '10')
+    formatacao_condicional_nulo(sheet1, 'K', 'equal', '')
+
+    formatacao_condicional_bom_b(sheet1, 'L', 'between', '0.001','1.499')
+    formatacao_condicional_ruim(sheet1, 'L', 'greaterThanOrEqual', '1.5')
+    formatacao_condicional_nulo(sheet1, 'L', 'equal', '')
+
+    formatacao_condicional_bom(sheet1, 'S', 'greaterThanOrEqual', '1')
+    formatacao_condicional_ruim_b(sheet1, 'S', 'between', '0.001', '0.999')
+    formatacao_condicional_nulo(sheet1, 'S', 'equal', '')
+
+    formatacao_condicional_bom(sheet1, 'M', 'greaterThanOrEqual', '16')
+    formatacao_condicional_ruim_b(sheet1, 'M', 'between', '0.001', '15.999')
+    formatacao_condicional_nulo(sheet1, 'M', 'equal', '')
+
+    formatacao_condicional_bom_b(sheet1, 'P', 'between', '0.001','4.999')
+    formatacao_condicional_ruim(sheet1, 'P', 'greaterThanOrEqual', '5')
+    formatacao_condicional_nulo(sheet1, 'P', 'equal', '')
+
+    formatacao_condicional_bom(sheet1, 'I', 'greaterThanOrEqual', '20')
+    formatacao_condicional_ruim_b(sheet1, 'I', 'between', '0.001', '19.999')
+    formatacao_condicional_nulo(sheet1, 'I', 'equal', '')
 
     #Congelar coluna A
     sheet1.freeze_panes = "B1"
