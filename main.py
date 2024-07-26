@@ -160,7 +160,7 @@ def obter_dados_ativos(ativo):
     if vpa != 0 and preco_atual != 0:
         ey2 = (vpa / preco_atual) * 100
     
-    # Lista com os indicadores padrões de investimento
+    #Lista com os indicadores padrões de investimento
     lista_indicadores = {
         'Ativo': ativo,
         'Valor': preco_atual,
@@ -245,7 +245,7 @@ def salvar_dados_excel():
     df.to_excel('Investimentos.xlsx', index=False)
     print("Dados salvos!")
 
-    # Recarregar a planilha para aplicar a formatação
+    #Recarregar a planilha para aplicar a formatação
     wb = openpyxl.load_workbook('Investimentos.xlsx')
     sheet1 = wb.active
 
