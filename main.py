@@ -27,14 +27,11 @@ sheet1 = wb.active
 lista_acoes = []
 
 #Definindo cores
-preto = "#000000" #black
 branco = "#f1ebeb" #white
 azul = "#24c0eb" #blue
-cinza = "#cacaca" #gray
 
 #Define cores para a formatação condicional
 green_fill = PatternFill(start_color='00FF00', end_color='00FF00', fill_type='solid')
-yellow_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
 red_fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
 
 #Cria a janela principal
@@ -54,10 +51,10 @@ entrada.pack(pady=10)
 def adicionar_acao():
     global max_linhas
     acao = entrada.get()
-    if acao:  # Verifica se o campo de entrada não está vazio
+    if acao:  #Verifica se o campo de entrada não está vazio
         lista_acoes.append(acao)
         max_linhas += 1
-        entrada.delete(0, tk.END)  # Limpa o campo de entrada após adicionar o nome
+        entrada.delete(0, tk.END)  #Limpa o campo de entrada após adicionar o nome
         print(f"Ação '{acao}' adicionado(a)!")
     else:
         print("O campo de entrada está vazio. Por favor, digite uma ação.")
@@ -66,8 +63,53 @@ def adicionar_acao():
 botao = tk.Button(frame, text="Adicionar", command=adicionar_acao, bg=azul, fg=branco, font=("Uvy 13 bold"), relief=RAISED, overrelief=RIDGE)
 botao.pack(pady=10)
 
+#Funções formatação condicional
+def formatacao_condicional_bom(planilha, coluna, parametro, valor):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    formatacao_bom = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='92D050', end_color='92D050', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_bom)
+
+def formatacao_condicional_bom_b(planilha, coluna, parametro, valori, valorf):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    formatacao_bom = CellIsRule(operator=parametro, formula=[valori,valorf], fill=PatternFill(start_color='92D050', end_color='92D050', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_bom)
+
+def formatacao_condicional_bom_c(planilha, celula, parametro, valor):
+    area = "{}:{}".format(celula, celula)
+    formatacao_bom = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='92D050', end_color='92D050', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_bom)
+
+def formatacao_condicional_ruim(planilha, coluna, parametro, valor):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    formatacao_ruim = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_ruim)
+
+def formatacao_condicional_ruim_b(planilha, coluna, parametro, valori, valorf):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    formatacao_ruim = CellIsRule(operator=parametro, formula=[valori,valorf], fill=PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_ruim)
+
+def formatacao_condicional_ruim_c(planilha, celula, parametro, valori, valorf):
+    area = "{}:{}".format(celula, celula)
+    formatacao_ruim = CellIsRule(operator=parametro, formula=[valori,valorf], fill=PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_ruim)
+
+def formatacao_condicional_nulo(planilha, coluna, parametro, valor):
+    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
+    formatacao_nulo = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_nulo)
+
+def formatacao_condicional_nulo_c(planilha, celula, parametro, valor):
+    area = "{}:{}".format(celula, celula)
+    formatacao_nulo = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid'))
+    planilha.conditional_formatting.add(area, formatacao_nulo)
+
+c = 2
+
 #Funçao para pegar as informações de cada ativo
 def obter_dados_ativos(ativo):
+
+    global c
 
     #Formatar a URL corretamente com o ativo que o usuário escolheu
     url = "https://statusinvest.com.br/acoes/{}".format(ativo)
@@ -85,6 +127,7 @@ def obter_dados_ativos(ativo):
 
     infos = site.find_all('strong', {'class': 'value d-block lh-4 fs-4 fw-700'})
     infos2 = site.find_all('strong', {'class': 'value'})
+    global preco_atual
     try:
         preco_atual = float(site.find('strong', {'class': 'value'}).text.replace(',','.').strip(''))
     except ValueError:
@@ -117,10 +160,10 @@ def obter_dados_ativos(ativo):
         p_vp = float(infos[3].text.replace(',','.').strip(''))
     except ValueError:
         p_vp = 0.0
-    try:
-        dy = float(infos[0].text.replace(',','.').replace('%','').strip(''))
-    except ValueError:
-        dy = 0.0
+    #try:
+    #    dy = float(infos[0].text.replace(',','.').replace('%','').strip(''))
+    #except ValueError:
+    #    dy = 0.0
     try:
         liq_corrente = float(infos[19].text.replace(',','.').strip(''))
     except ValueError:
@@ -144,9 +187,11 @@ def obter_dados_ativos(ativo):
         
     #Definindo valores padrão
     teto9 = valor_justo = ey = ey2 = 0
+    
+    teto9 = f"=(H{c}*B{c})/9"
 
-    if dy != 0 and preco_atual != 0:
-        teto9 = (dy * preco_atual) / 9
+    #if dy != 0 and preco_atual != 0:
+    #    teto9 = (dy * preco_atual) / 9
     
     if lpa != 0 and vpa != 0:
         try:
@@ -169,7 +214,7 @@ def obter_dados_ativos(ativo):
         'Valor Justo por Ação': valor_justo,
         'Margem Líquida': margem_liquida,
         'LPA': lpa,
-        'DY': dy,
+        'DY': 0,
         'EY': ey,
         'EY2': ey2,
         'P/L': pl,
@@ -182,6 +227,9 @@ def obter_dados_ativos(ativo):
         'Dívida Líquida/Ebitida': div_liquida_ebitda,
         'Liq. Corrente': liq_corrente
     }
+
+    c += 1
+
     return lista_indicadores
 
 #Função para formatar as colunas com R$
@@ -196,36 +244,16 @@ def obter_dados_ativos(ativo):
 #        celula = planilha[f'{coluna}{i}']
 #        celula.number_format = '0.00%'
 
-#Funções formatação condicional
-def formatacao_condicional_bom(planilha, coluna, parametro, valor):
-    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
-    formatacao_bom = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='92D050', end_color='92D050', fill_type='solid'))
-    planilha.conditional_formatting.add(area, formatacao_bom)
-
-def formatacao_condicional_bom_b(planilha, coluna, parametro, valori, valorf):
-    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
-    formatacao_bom = CellIsRule(operator=parametro, formula=[valori,valorf], fill=PatternFill(start_color='92D050', end_color='92D050', fill_type='solid'))
-    planilha.conditional_formatting.add(area, formatacao_bom)
-
-def formatacao_condicional_ruim(planilha, coluna, parametro, valor):
-    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
-    formatacao_ruim = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid'))
-    planilha.conditional_formatting.add(area, formatacao_ruim)
-
-def formatacao_condicional_ruim_b(planilha, coluna, parametro, valori, valorf):
-    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
-    formatacao_ruim = CellIsRule(operator=parametro, formula=[valori,valorf], fill=PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid'))
-    planilha.conditional_formatting.add(area, formatacao_ruim)
-
-def formatacao_condicional_nulo(planilha, coluna, parametro, valor):
-    area = "{}2:{}{}".format(coluna,coluna,max_linhas)
-    formatacao_nulo = CellIsRule(operator=parametro, formula=[valor], fill=PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid'))
-    planilha.conditional_formatting.add(area, formatacao_nulo)
-
+d = 0
+aux = 2
 
 #Função para salvar os dados em Excel
 def salvar_dados_excel():
-    
+
+    global dados_ativos
+    global d
+    global aux
+
     #Lista para armazenar os dados de cada ativo separadamente
     dados_ativos = []
 
@@ -301,6 +329,34 @@ def salvar_dados_excel():
     formatacao_condicional_bom(sheet1, 'I', 'greaterThanOrEqual', '20')
     formatacao_condicional_ruim_b(sheet1, 'I', 'between', '0.001', '19.999')
     formatacao_condicional_nulo(sheet1, 'I', 'equal', '')
+
+    #formatacao_condicional_bom(sheet1, 'H', 'greaterThanOrEqual', '20')
+    #formatacao_condicional_ruim_b(sheet1, 'H', 'between', '0.001', '19.999')
+    #formatacao_condicional_nulo(sheet1, 'H', 'equal', '')
+
+    formatacao_condicional_bom(sheet1, 'J', 'greaterThanOrEqual', '25')
+    formatacao_condicional_ruim_b(sheet1, 'J', 'between', '0.001', '24.999')
+    formatacao_condicional_nulo(sheet1, 'J', 'equal', '')
+
+    for i in range(0,len(lista_acoes)):
+
+        #vpa tem que ser maior que o valor de mercado da acao
+        formatacao_condicional_bom_c(sheet1, f'C{aux}', 'greaterThanOrEqual', f'{dados_ativos[d]['Valor']}')
+        formatacao_condicional_ruim_c(sheet1, f'C{aux}', 'between', '0.001', f'{dados_ativos[d]['Valor'] - 0.001}')
+        formatacao_condicional_nulo_c(sheet1, f'C{aux}', 'equal', '')
+
+        #teto 9% tem que ser maior que o valor de mercado da acao
+        formatacao_condicional_bom_c(sheet1, f'D{aux}', 'greaterThanOrEqual', f'{dados_ativos[d]['Valor']}')
+        formatacao_condicional_ruim_c(sheet1, f'D{aux}', 'between', '0.001', f'{dados_ativos[d]['Valor'] - 0.001}')
+        formatacao_condicional_nulo_c(sheet1, f'D{aux}', 'equal', '')
+
+        #valor justo por acao tem que ser maior que o valor de mercado por acao
+        formatacao_condicional_bom_c(sheet1, f'E{aux}', 'greaterThanOrEqual', f'{dados_ativos[d]['Valor']}')
+        formatacao_condicional_ruim_c(sheet1, f'E{aux}', 'between', '0.001', f'{dados_ativos[d]['Valor'] - 0.001}')
+        formatacao_condicional_nulo_c(sheet1, f'E{aux}', 'equal', '')
+
+        d += 1
+        aux += 1
 
     #Congelar coluna A
     sheet1.freeze_panes = "B1"
