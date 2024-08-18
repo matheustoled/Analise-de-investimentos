@@ -37,7 +37,7 @@ red_fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='soli
 #Cria a janela principal
 janela = tk.Tk()
 janela.title("Análise de Ações")
-janela.geometry("375x185")
+janela.geometry("400x200")
 
 #Cria um frame para a entrada e o botão
 frame = tk.Frame(janela)
@@ -45,23 +45,29 @@ frame.pack(pady=20, padx=20, fill='both', expand=True)
 
 #Cria um campo de entrada dentro do frame
 entrada = tk.Entry(frame, width=30)
-entrada.pack(pady=10)
+entrada.grid(row=0, column=0, columnspan=2, pady=10, padx=10)
+
+#Cria um campo para apresentar texto
+label = tk.Label(frame, text="")
+label.grid(row=1, column=0, columnspan=2, pady=5)
 
 #Criando função de entrada da informação
 def adicionar_acao():
+    global label
     global max_linhas
     acao = entrada.get()
     if acao:  #Verifica se o campo de entrada não está vazio
         lista_acoes.append(acao)
         max_linhas += 1
+        label.config(text="Ação {} adicionado(a)!".format(acao))
         entrada.delete(0, tk.END)  #Limpa o campo de entrada após adicionar o nome
-        print(f"Ação '{acao}' adicionado(a)!")
+        print(f"Ação {acao} adicionado(a)!")
     else:
         print("O campo de entrada está vazio. Por favor, digite uma ação.")
 
 #Cria um botão dentro do frame para enviar o nome
 botao = tk.Button(frame, text="Adicionar", command=adicionar_acao, bg=azul, fg=branco, font=("Uvy 13 bold"), relief=RAISED, overrelief=RIDGE)
-botao.pack(pady=10)
+botao.grid(row=2, column=0, sticky="ew", padx=5, pady=10)
 
 #Funções formatação condicional
 def formatacao_condicional_bom(planilha, coluna, parametro, valor):
@@ -271,6 +277,7 @@ def salvar_dados_excel():
 
     #Exportar o DataFrame para um arquivo Excel
     df.to_excel('Investimentos.xlsx', index=False)
+    label.config(text="Dados salvos!")
     print("Dados salvos!")
 
     #Recarregar a planilha para aplicar a formatação
@@ -366,7 +373,11 @@ def salvar_dados_excel():
 
 #Cria um botão para salvar os dados em Excel
 botao_salvar = tk.Button(frame, text="Salvar Dados", command=salvar_dados_excel, bg=azul, fg=branco, font=("Uvy 13 bold"), relief=RAISED, overrelief=RIDGE)
-botao_salvar.pack(pady=10)
+botao_salvar.grid(row=2, column=1, sticky="ew", padx=5, pady=10)
+
+#Faz a janela ajustar o tamanho dos botões dinamicamente
+frame.grid_columnconfigure(0, weight=1)
+frame.grid_columnconfigure(1, weight=1)
 
 #Executa o loop principal da interface
 janela.mainloop()
