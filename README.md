@@ -17,5 +17,3 @@ Este projeto foi desenvolvido em Python para automatizar a coleta de dados finan
 - BeautifulSoup para parsing do HTML
 - Pandas para manipulação de dados
 - Openpyxl para manipulação de arquivos Excel
-
-
