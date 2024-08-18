@@ -1,4 +1,4 @@
-# Financial Data Automation Project
+#Projeto de Automação de Dados Financeiros
 
 Este projeto foi desenvolvido em Python para automatizar a coleta de dados financeiros de ações a partir do site [Status Invest](https://statusinvest.com.br/). Ele realiza cálculos e análises diretamente em uma planilha Excel, facilitando a análise fundamentalista para investidores, economizando tempo e minimizando erros de digitação.
 
